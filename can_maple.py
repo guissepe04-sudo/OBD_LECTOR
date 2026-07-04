@@ -11,7 +11,7 @@ Parametros decodificados:
   122  B0+B1 /256  -> Velocidad: km/h (Q8.8 fixed-point)
   287  B1 *100/150 -> SOC:       % (escala 0-150)
   2C0  B0+B1 *0.5  -> Bateria:   V (voltaje HV)
-  17B  B4+B5       -> Carga:     unidad raw (0 = no cargando)
+  17B  B4+B5       -> Corriente: unidad raw decreciente (CCCV), max ~700, 0=sin carga
   2A4  B4 =0x40    -> Freno mano: activo (senal principal, ~100ms)
   284  B0 =0x04    -> Freno mano: activo (senal alternativa, mas frecuente)
 """
@@ -78,10 +78,10 @@ def procesar(linea, estado):
         except (ValueError, IndexError):
             pass
 
-    # SOC — 287 B1 escala 0-150
+    # SOC — 287 B1 escala 0-152 (0x98=100%)
     elif can_id == "287" and len(partes) >= 3:
         try:
-            estado.soc = int(partes[2], 16) * 100 / 150
+            estado.soc = int(int(partes[2], 16) * 100 / 152)
         except (ValueError, IndexError):
             pass
 
@@ -93,11 +93,12 @@ def procesar(linea, estado):
         except (ValueError, IndexError):
             pass
 
-    # Corriente de carga — 17B B4+B5
+    # Corriente de carga — 17B B4+B5 (0=no carga, >0=cargando; filtrar picos >1000)
     elif can_id == "17B" and len(partes) >= 7:
         try:
             raw = (int(partes[5], 16) << 8) | int(partes[6], 16)
-            estado.carga_raw = raw
+            if raw == 0 or raw <= 1000:
+                estado.carga_raw = raw
         except (ValueError, IndexError):
             pass
 
@@ -139,22 +140,25 @@ def mostrar(e, multilinea=False):
     freno = "ACTIVO" if freno_activo else ("libre" if e.freno is not None else "?")
 
     if e.carga_raw is not None and e.carga_raw > 0:
-        carga = f"CARGANDO ({e.carga_raw} raw)"
+        cargando = "CARGANDO"
+        corriente = f"{e.carga_raw}"
     elif e.carga_raw == 0:
-        carga = "no"
+        cargando = "no"
+        corriente = "0"
     else:
-        carga = "?"
+        cargando = "?"
+        corriente = "?"
 
     if multilinea:
         print(f"  Marcha    : {mar}")
         print(f"  Velocidad : {vel}")
         print(f"  SOC       : {soc}")
         print(f"  Bateria   : {bat}")
-        print(f"  Carga     : {carga}")
+        print(f"  Carga     : {cargando:<10}  Corriente: {corriente}")
         print(f"  Freno mano: {freno}")
     else:
         print(f"Marcha: {mar:<2}  |  Vel: {vel:<10}  |  SOC: {soc:<5}  |"
-              f"  Bat: {bat:<7}  |  Carga: {carga:<20}  |  Freno: {freno}")
+              f"  Bat: {bat:<7}  |  Carga: {cargando:<10} Corr: {corriente:<6}  |  Freno: {freno}")
 
 
 # ---------------------------------------------------------------------------

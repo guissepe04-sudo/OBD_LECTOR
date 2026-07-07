@@ -1,7 +1,7 @@
 import serial
 import time
 
-PORT = "COM3"
+PORT = "/dev/ttyUSB0"
 BAUDRATE = 115200
 
 GEAR_CODES = {"01": "P", "02": "R", "03": "N", "04": "D"}

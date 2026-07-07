@@ -27,7 +27,7 @@ def leer_pid(conexion, pid: str):
 
 
 #con = escanear_red()
-con = conectar("COM3", 115200)
+con = conectar("/dev/ttyUSB0", 115200)
 PIDS = ["RPM", "SPEED", "COOLANT_TEMP", "INTAKE_TEMP", "THROTTLE_POS",
         "ENGINE_LOAD", "FUEL_LEVEL", "MAF", "INTAKE_PRESSURE",
         "BAROMETRIC_PRESSURE", "OIL_TEMP", "FUEL_RATE"]

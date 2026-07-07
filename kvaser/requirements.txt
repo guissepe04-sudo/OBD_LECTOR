@@ -1,0 +1,7 @@
+pyserial
+
+# canlib (oficial de Kvaser) NO esta en PyPI, se instala manualmente:
+#   1. Descargar el wheel desde https://kvaser.com/single-download/?download_id=1011691547
+#   2. pip install canlib-X.Y.Z-py3-none-any.whl
+# Ademas requiere el driver propietario de Kvaser instalado (mhydra/kvcommon via dkms),
+# ver README.md
